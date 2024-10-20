@@ -1,0 +1,117 @@
+original database(TEST1)
+========================
+SQL> select name,open_mode,database_role from v$database;
+
+NAME	  OPEN_MODE	       DATABASE_ROLE
+--------- -------------------- ----------------
+TEST1	  READ WRITE	       PRIMARY
+
+
+
+SQL> select name from v$datafile;
+
+NAME
+--------------------------------------------------------------------------------
+/u01/app/oracle/oradata/TEST1/datafile/o1_mf_system_mbskwpv1_.dbf
+/u01/app/oracle/oradata/TEST1/datafile/o1_mf_sysaux_mbskxsym_.dbf
+/u01/app/oracle/oradata/TEST1/datafile/o1_mf_undotbs1_mbsky92q_.dbf
+/u01/app/oracle/oradata/TEST1/datafile/o1_mf_users_mbskyb4c_.dbf
+
+SQL> select member from v$logfile;
+
+MEMBER
+--------------------------------------------------------------------------------
+/u01/app/oracle/oradata/TEST1/onlinelog/o1_mf_3_mbskztsv_.log
+/u01/app/oracle/fast_recovery_area/TEST1/onlinelog/o1_mf_3_mbskzw33_.log
+
+/u01/app/oracle/oradata/TEST1/onlinelog/o1_mf_2_mbskzo60_.log
+/u01/app/oracle/fast_recovery_area/TEST1/onlinelog/o1_mf_2_mbskzq27_.log
+
+/u01/app/oracle/oradata/TEST1/onlinelog/o1_mf_1_mbskzo4f_.log
+/u01/app/oracle/fast_recovery_area/TEST1/onlinelog/o1_mf_1_mbskzpq4_.log
+
+6 rows selected.
+
+SQL> 
+============================================================================
+********************************************
+		****manual db creation*****
+********************************************
+>>>set the environmets
+[oracle@primary ~]$ cat test2.env 
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=/u01/app/oracle/product/19.0.0.0/dbhome_1 
+export ORACLE_SID=test2
+PATH=$PATH:$HOME/.local/bin:$ORACLE_HOME/bin
+export PATH
+
+>>>create pfile
+[oracle@primary ~]$ cd /u01/app/oracle/product/19.0.0.0/dbhome_1/dbs/
+[oracle@primary dbs]$ cat inittest2.ora 
+test2.__data_transfer_cache_size=0
+test2.__db_cache_size=1828716544
+test2.__inmemory_ext_roarea=0
+test2.__inmemory_ext_rwarea=0
+test2.__java_pool_size=0
+test2.__large_pool_size=16777216
+test2.__oracle_base='/u01/app/oracle'#ORACLE_BASE set from environment
+test2.__pga_aggregate_target=838860800
+test2.__sga_target=2516582400
+test2.__shared_io_pool_size=134217728
+test2.__shared_pool_size=520093696
+test2.__streams_pool_size=0
+test2.__unified_pga_pool_size=0
+*.audit_file_dest='/u01/app/oracle/admin/test2/adump'
+*.audit_trail='db'
+*.compatible='19.0.0'
+*.control_files='/u01/app/oracle/oradata/TEST2/controlfile/o1_mf_mbskzlv3_.ctl','/u01/app/oracle/fast_recovery_area/TEST2/controlfile/o1_mf_mbskzlvn_.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='/u01/app/oracle/oradata'
+*.db_name='test2'
+*.db_recovery_file_dest='/u01/app/oracle/fast_recovery_area'
+*.db_recovery_file_dest_size=8256m
+*.diagnostic_dest='/u01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=test2XDB)'
+*.open_cursors=300
+*.pga_aggregate_target=796m
+*.processes=300
+*.remote_login_passwordfile='EXCLUSIVE'
+*.sga_target=2388m
+*.undo_tablespace='UNDOTBS1'
+[oracle@primary dbs]$ 
+
+>>set the environment and start the DB in nomout state
+[oracle@primary ~]$. test2.env 
+[oracle@primary ~]$ sqlplus / as sysdba
+
+startup nomount pfile='/u01/app/oracle/product/19.0.0.0/dbhome_1/dbs/inittest2.ora';
+
+>>run the below Script
+
+CREATE DATABASE test2
+   USER SYS IDENTIFIED BY oracle
+   USER SYSTEM IDENTIFIED BY oracle
+   LOGFILE GROUP 1 ('/u01/app/oracle/oradata/TEST2/onlinelog/redo01.log') SIZE 100M,
+           GROUP 2 ('/u01/app/oracle/oradata/TEST2/onlinelog/redo02.log') SIZE 100M,
+           GROUP 3 ('/u01/app/oracle/oradata/TEST2/onlinelog/redo03.log') SIZE 100M
+   MAXLOGFILES 5
+   MAXLOGMEMBERS 5
+   MAXLOGHISTORY 1
+   MAXDATAFILES 100
+   CHARACTER SET AL32UTF8
+   NATIONAL CHARACTER SET AL16UTF16
+   EXTENT MANAGEMENT LOCAL
+   DATAFILE '/u01/app/oracle/oradata/TEST1/datafile/system01.dbf' SIZE 100M REUSE
+   SYSAUX DATAFILE '/u01/app/oracle/oradata/TEST1/datafile/sysaux01.dbf' SIZE 500M REUSE
+   DEFAULT TABLESPACE users
+      DATAFILE '/u01/app/oracle/oradata/TEST1/datafile/users01.dbf' SIZE 100M REUSE
+   DEFAULT TEMPORARY TABLESPACE tempts1
+      TEMPFILE '/u01/app/oracle/oradata/TEST1/datafile/temp01.dbf' SIZE 100M REUSE
+   UNDO TABLESPACE undotbs1
+      DATAFILE '/u01/app/oracle/oradata/TEST1/datafile/undotbs01.dbf' SIZE 200M REUSE;
+
+
+@?/rdbms/admin/catalog.sql
+@?/rdbms/admin/catproc.sql
+@?/sqlplus/admin/pupbld.sql
+
