@@ -115,3 +115,43 @@ CREATE DATABASE test2
 @?/rdbms/admin/catproc.sql
 @?/sqlplus/admin/pupbld.sql
 
+
+
+
+
+The scripts listed are part of the Oracle Database setup process. Here's what each script is used for:
+
+1. @?/rdbms/admin/catalog.sql:
+=================================
+   - This script creates the **data dictionary views** and **dynamic performance views** required for Oracle Database. 
+   - It essentially sets up the internal system views and objects that allow users and administrators to interact with the database.
+   - It must be run as a **user with SYSDBA privileges** during database creation or when rebuilding the data dictionary.
+
+2. @?/rdbms/admin/catproc.sql:
+================================
+   - This script installs the **PL/SQL packages and procedures** required by Oracle Database.
+   - It creates built-in packages like `DBMS_OUTPUT`, `UTL_FILE`, `DBMS_JOB`, etc., which are used for various database operations and development.
+   - This is also run by a user with SYSDBA privileges, typically after `catalog.sql`.
+
+3. @?/sqlplus/admin/pupbld.sql:
+================================
+   - This script sets up the SQL*Plus product tables, specifically for configuring roles and access for SQL*Plus users.
+   - It creates the `PRODUCT_USER_PROFILE` table, which is used to restrict or control SQL*Plus commands for specific users.
+   - Unlike the other two scripts, this is often run as the **SYSTEM user** (not SYS) after the database is created and configured.
+
+What does `@?` mean?
+===========================
+The `?` is an Oracle shorthand for the **Oracle Home directory**. When you run these scripts, Oracle automatically resolves the path based on your database installation location.
+
+Typical Usage:
+===============
+- These scripts are usually executed during or after the creation of a new Oracle database.
+- They must be run in the correct order:
+  1. catalog.sqls
+  2. catproc.sql
+  3. pupbld.sql  
+
+This ensures that the database dictionary, PL/SQL packages, and SQL*Plus configurations are all properly initialized.
+
+
+
